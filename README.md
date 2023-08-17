@@ -2,6 +2,10 @@
 
 SiX Web Scraper adalah proyek untuk mengambil data dari Sistem Informasi Akademik SiX milik ITB. Proyek ini fokus pada pengambilan data mata kuliah, kelas mata kuliah, jadwal, dan informasi terkait dari halaman jadwal kuliah pada menu kelas SiX.
 
+## Disclaimer
+
+**Perhatian**: Proyek ini adalah upaya untuk mengambil data dari Sistem Informasi Akademik SiX yang dimiliki oleh Institut Teknologi Bandung (ITB). Data yang diperoleh melalui proyek ini sepenuhnya dimiliki oleh ITB dan digunakan dengan tujuan non-komersial dan pendidikan. Pembuat proyek tidak memiliki kepemilikan atau klaim atas data yang diambil melalui scraping. 
+
 ## Prasyarat
 
 Pastikan Anda telah menginstal semua prasyarat yang tercantum dalam file `requirements.txt` sebelum menjalankan proyek ini.
