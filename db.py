@@ -6,12 +6,12 @@ import lib.fakultas_parser as FakultasParser
 import lib.prodi_parser as ProdiParser
 import lib.mata_kuliah_parser as MKParser
 import lib.input as Input
+from config import DATABASE_NAME, DATABASE_HOST, DATABASE_USER, DATABASE_PASSWORD
 
-
-database_name = 'six_db'
-host = 'localhost'
-user = 'root'
-password = 'password'
+database_name = DATABASE_NAME
+host = DATABASE_HOST
+user = DATABASE_USER
+password = DATABASE_PASSWORD
 
 
 def __create_db__(cursor, connection):
