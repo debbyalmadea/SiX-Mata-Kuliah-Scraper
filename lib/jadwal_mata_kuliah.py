@@ -9,8 +9,7 @@ class JadwalMataKuliah:
         return (
             self.hari == jadwal.hari and
             self.waktu_awal == jadwal.waktu_awal and
-            self.waktu_akhir == jadwal.waktu_akhir and
-            self.ruangan == jadwal.ruangan
+            self.waktu_akhir == jadwal.waktu_akhir
         )
 
     def to_dict(self):

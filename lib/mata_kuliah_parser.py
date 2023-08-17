@@ -6,24 +6,34 @@ from lib.kelas_mata_kuliah import KelasMataKuliah
 from lib.jadwal_mata_kuliah import JadwalMataKuliah
 import lib.prodi_parser as ProdiParser
 import lib.output as Output
+import lib.input as Input
 
 
 def get_kelas_mata_kuliah_by_prodi(kode_prodi, tahun=2023, semester=1):
     soup = Soup(prodi=kode_prodi, tahun=tahun, semester=semester).soup
-    mata_kuliah_list = __parse_soup__(
+    mata_kuliah_list, dosen_list = __parse_soup__(
         soup, kode_prodi, tahun, semester)
-    return mata_kuliah_list
+    return mata_kuliah_list, dosen_list
 
 
 def get_all_mata_kuliah(tahun=2023, semester=1):
     prodi_list = ProdiParser.get_all_kode_prodi(ProdiParser.read_prodi())
     mata_kuliah_list = []
+    dosen_list = []
     for prodi in prodi_list:
         print('Scraping mata kuliah prodi', prodi)
-        mata_kuliah_list += get_kelas_mata_kuliah_by_prodi(
+        mata_kuliah_prodi_list, dosen_prodi_list = get_kelas_mata_kuliah_by_prodi(
             prodi, tahun, semester)
+        dosen_list += dosen_prodi_list
+        mata_kuliah_list += mata_kuliah_prodi_list
         print()
+
     __save_mata_kuliah__(mata_kuliah_list, f"mata_kuliah_{tahun}-{semester}")
+    Output.save_json({'data': dosen_list}, f'dosen_{tahun}-{semester}')
+
+
+def read_mata_kuliah(tahun=2023, semester=1):
+    return Input.read_json(f'mata_kuliah_{tahun}-{semester}')['data']
 
 
 def __is_mata_kuliah_exists__(kode_matkul, mata_kuliah_list):
@@ -50,17 +60,17 @@ def __save_mata_kuliah__(mata_kuliah_list, name='mata_kuliah'):
     for mk in mata_kuliah_list:
         dict['data'].append(mk.to_dict())
 
-    Output.save_json(dict, 'mata_kuliah')
+    Output.save_json(dict, name)
 
 
 def __parse_soup__(soup, kode_prodi, tahun, semester):
-
     mata_kuliah_list = []
+    all_dosen_list = []
 
     table = soup.find('table')
 
     if not table:
-        return []
+        return [], []
 
     table_data = table.find_all('tr')
 
@@ -75,14 +85,21 @@ def __parse_soup__(soup, kode_prodi, tahun, semester):
         kode = individual_row_data[0]
         print('Scrapping data kelas', kode)
         nama = individual_row_data[1]
-        sks = individual_row_data[2]
+        sks = int(individual_row_data[2])
 
         mata_kuliah = MataKuliah(kode, kode_prodi, nama, sks)
 
-        no_kelas = individual_row_data[3]
-        kuota = individual_row_data[4]
+        no_kelas = int(individual_row_data[3])
+        kuota = 0
+        if individual_row_data[4].isnumeric():
+            kuota = int(individual_row_data[4])
+
         list_dosen = [dosen.strip()
                       for dosen in individual_row_data[5].split('\n')]
+
+        for dosen in list_dosen:
+            if dosen not in all_dosen_list:
+                all_dosen_list.append(dosen)
 
         keterangan_batasan = row_data[-2].find_all('p')
         kelas_mata_kuliah = KelasMataKuliah(
@@ -131,4 +148,4 @@ def __parse_soup__(soup, kode_prodi, tahun, semester):
         if not __is_mata_kuliah_exists__(kode, mata_kuliah_list):
             mata_kuliah_list.append(mata_kuliah)
 
-    return mata_kuliah_list
+    return mata_kuliah_list, all_dosen_list
