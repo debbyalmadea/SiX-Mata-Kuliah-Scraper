@@ -10,7 +10,7 @@ class HTMLExtractor(ABC):
 
     def get_soup(self, send_request: bool = True) -> BeautifulSoup:
         if send_request or self.soup == None:
-            response = self.getResponse()
+            response = self.get_response()
             self.soup = BeautifulSoup(response.text, 'html.parser')
         
         return self.soup

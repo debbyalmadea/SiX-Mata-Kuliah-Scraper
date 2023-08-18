@@ -12,6 +12,12 @@ class MataKuliahExtractor(HTMLExtractor):
         self.fakultas = None
         self.prodi = None
         self.soup = None
+
+
+    def __new__(cls):
+        if not hasattr(cls, 'instance'):
+            cls.instance = super(MataKuliahExtractor, cls).__new__(cls)
+        return cls.instance
     
 
     def set_config(self, tahun: int = None, semester: int = None, fakultas: str = None, prodi: str = None) -> None:
