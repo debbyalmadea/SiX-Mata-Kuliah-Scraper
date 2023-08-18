@@ -47,12 +47,6 @@ class MataKuliahExtractor(HTMLExtractor):
         if self.semester == None:
             raise Exception('Semester belum di set')
         
-        if self.fakultas == None:
-            raise Exception('Fakultas belum di set')
-        
-        if self.prodi == None:
-            raise Exception('Prodi belum di set')
-        
         BASE_URL = f'https://akademik.itb.ac.id/app/K/mahasiswa:{config.NIM}+{self.tahun}-{self.semester}/kelas/jadwal/kuliah?fakultas={self.fakultas}&prodi={self.prodi}'
 
         response = requests.get(
