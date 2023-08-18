@@ -32,7 +32,3 @@ class ProdiParser(HTMLParser):
                     'nama': prodi.split('-')[1].strip(),
                     'fakultas': fakultas
                 }]
-            
-            break
-        
-        print(self.data)
