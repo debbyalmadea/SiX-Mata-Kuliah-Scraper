@@ -2,14 +2,14 @@ from abc import ABC, abstractmethod
 from bs4 import BeautifulSoup
 
 
-class HTMLExtractor:
+class HTMLExtractor(ABC):
     @abstractmethod
-    def getResponse(self):
+    def get_response(self):
         pass
 
 
-    def getSoup(self, sendRequest: bool = True) -> BeautifulSoup:
-        if sendRequest or self.soup == None:
+    def get_soup(self, send_request: bool = True) -> BeautifulSoup:
+        if send_request or self.soup == None:
             response = self.getResponse()
             self.soup = BeautifulSoup(response.text, 'html.parser')
         

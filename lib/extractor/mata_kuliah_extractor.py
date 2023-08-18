@@ -14,7 +14,7 @@ class MataKuliahExtractor(HTMLExtractor):
         self.soup = None
     
 
-    def setConfig(self, tahun: int = None, semester: int = None, fakultas: str = None, prodi: str = None) -> None:
+    def set_config(self, tahun: int = None, semester: int = None, fakultas: str = None, prodi: str = None) -> None:
         if tahun != None:
             self.tahun = tahun
         
@@ -28,7 +28,7 @@ class MataKuliahExtractor(HTMLExtractor):
             self.prodi = prodi
 
 
-    def getConfig(self) -> dict:
+    def get_config(self) -> dict:
         return {
             'tahun': self.tahun,
             'semester': self.semester,
@@ -37,7 +37,7 @@ class MataKuliahExtractor(HTMLExtractor):
         }
     
     
-    def getResponse(self) -> requests.models.Response:
+    def get_response(self) -> requests.models.Response:
         if config.NIM == None:
             raise Exception('NIM belum di set')
         
