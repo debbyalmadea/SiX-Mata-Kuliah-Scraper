@@ -2,10 +2,11 @@
 import mysql.connector
 from datetime import datetime
 
-import lib.fakultas_parser as FakultasParser
-import lib.prodi_parser as ProdiParser
-import lib.mata_kuliah_parser as MKParser
-import lib.input as Input
+from lib.parser.fakultas_parser import FakultasParser
+from lib.parser.prodi_parser import ProdiParser
+from lib.parser.jadwal_kuliah_parser import JadwalKuliahParser
+from lib.parser.dosen_parser import DosenParser
+
 from config import DATABASE_NAME, DATABASE_HOST, DATABASE_USER, DATABASE_PASSWORD
 
 database_name = DATABASE_NAME
@@ -24,7 +25,7 @@ def __save_fakultas_json__(cursor):
     print("Creating table fakultas...")
     create_table_query = "CREATE TABLE IF NOT EXISTS fakultas (nama VARCHAR(20), PRIMARY KEY (nama))"
     cursor.execute(create_table_query)
-    fakultas_list = FakultasParser.read_fakultas()
+    fakultas_list = FakultasParser.read()
     for fakultas in fakultas_list:
         insert_query = "INSERT INTO fakultas (nama) VALUES (%s)"
         cursor.execute(insert_query, (fakultas,))
@@ -42,14 +43,14 @@ def __save_prodi_json__(cursor):
                                 FOREIGN KEY (fakultas) REFERENCES fakultas(nama)
                             )'''
     cursor.execute(create_table_query)
-    fakultas_prodi_list = ProdiParser.read_prodi()
+    prodi_list = ProdiParser.read()
     insert_query = "INSERT INTO program_studi (kode, nama, fakultas) VALUES (%s, %s, %s)"
-    for fakultas_prodi in fakultas_prodi_list:
-        fakultas = fakultas_prodi['fakultas']
-        prodi_list = fakultas_prodi['program_studi']
-        for prodi in prodi_list:
-            cursor.execute(
-                insert_query, (prodi['kode'], prodi['nama'], fakultas))
+    for prodi in prodi_list:
+        fakultas = prodi['fakultas']
+        kode = prodi['kode']
+        nama = prodi['nama']
+        cursor.execute(
+            insert_query, (kode, nama, fakultas))
 
     print("Table program_studi creation and data insertion successful.")
 
@@ -128,7 +129,7 @@ def __save_mata_kuliah_json__(cursor, tahun=2023, semester=1):
 
     dosen_insert_query = "INSERT INTO dosen (nama) VALUES (%s)"
 
-    all_dosen_list = Input.read_json(f'dosen_{tahun}-{semester}')['data']
+    all_dosen_list = DosenParser.read()
     for dosen in all_dosen_list:
         try:
             cursor.execute(dosen_insert_query, (dosen,))
@@ -136,7 +137,7 @@ def __save_mata_kuliah_json__(cursor, tahun=2023, semester=1):
             print("Error: {}".format(err))
     print("Table dosen creation and data insertion successful.")
 
-    mata_kuliah_list = MKParser.read_mata_kuliah(tahun, semester)
+    mata_kuliah_list = JadwalKuliahParser.read_mata_kuliah(tahun, semester)
 
     count_kelas_mk_row_query = "SELECT COUNT(*) FROM kelas_mata_kuliah"
     cursor.execute(count_kelas_mk_row_query)

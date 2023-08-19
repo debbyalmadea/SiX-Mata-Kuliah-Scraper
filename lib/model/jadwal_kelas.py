@@ -1,4 +1,4 @@
-class JadwalMataKuliah:
+class JadwalKelas:
     def __init__(self, hari, waktu_awal, waktu_akhir, ruangan) -> None:
         self.hari = hari
         self.waktu_awal = waktu_awal

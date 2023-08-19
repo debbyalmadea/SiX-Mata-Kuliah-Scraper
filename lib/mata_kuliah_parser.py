@@ -1,9 +1,9 @@
 from datetime import datetime
 
 from lib.soup import Soup
-from lib.mata_kuliah import MataKuliah
-from lib.kelas_mata_kuliah import KelasMataKuliah
-from lib.jadwal_mata_kuliah import JadwalMataKuliah
+from lib.model.mata_kuliah import MataKuliah
+from lib.model.kelas_mata_kuliah import KelasMataKuliah
+from lib.model.jadwal_kelas import JadwalMataKuliah
 import lib.prodi_parser as ProdiParser
 import lib.output as Output
 import lib.input as Input

@@ -1,4 +1,4 @@
-from lib.extractor.mata_kuliah_extractor import MataKuliahExtractor
+from lib.extractor.jadwal_kuliah_extractor import JadwalKuliahExtractor
 from lib.parser.parser import HTMLParser
 from lib.parser.fakultas_parser import FakultasParser
 
@@ -10,12 +10,12 @@ class ProdiParser(HTMLParser):
         self.tahun = tahun
         self.semester = semester
 
-        self.extractor = MataKuliahExtractor()
+        self.extractor = JadwalKuliahExtractor()
         self.extractor.set_config(tahun=tahun, semester=semester)
 
-
     def parse(self) -> None:
-        list_fakultas = FakultasParser(tahun=self.tahun, semester=self.semester).get()
+        list_fakultas = FakultasParser(
+            tahun=self.tahun, semester=self.semester).get()
 
         self.data = []
         for fakultas in list_fakultas:
@@ -24,8 +24,9 @@ class ProdiParser(HTMLParser):
             self.extractor.set_config(fakultas=fakultas)
             soup = self.extractor.get_soup()
 
-            list_prodi = [data.text.strip() for data in soup.find('select', {'id': 'prodi'}).find_all('option')][1:]
-            
+            list_prodi = [data.text.strip() for data in soup.find(
+                'select', {'id': 'prodi'}).find_all('option')][1:]
+
             for prodi in list_prodi:
                 self.data += [{
                     'kode': prodi.split('-')[0].strip(),
