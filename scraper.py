@@ -1,4 +1,3 @@
-from lib.parser.prodi_parser import ProdiParser
 from lib.parser.jadwal_kuliah_parser import JadwalKuliahParser
 
 import db
