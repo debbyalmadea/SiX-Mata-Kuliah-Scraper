@@ -3,6 +3,12 @@ from bs4 import BeautifulSoup
 
 
 class HTMLExtractor(ABC):
+    def __new__(cls):
+        if not hasattr(cls, 'instance'):
+            cls.instance = super(HTMLExtractor, cls).__new__(cls)
+        return cls.instance
+    
+
     @abstractmethod
     def get_response(self):
         pass

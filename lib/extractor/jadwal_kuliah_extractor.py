@@ -13,10 +13,13 @@ class JadwalKuliahExtractor(HTMLExtractor):
         self.prodi = None
         self.soup = None
 
-    def __new__(cls):
-        if not hasattr(cls, 'instance'):
-            cls.instance = super(JadwalKuliahExtractor, cls).__new__(cls)
-        return cls.instance
+    def get_config(self) -> dict:
+        return {
+            'tahun': self.tahun,
+            'semester': self.semester,
+            'fakultas': self.fakultas,
+            'prodi': self.prodi
+        }
 
     def set_config(self, tahun: int = None, semester: int = None, fakultas: str = None, prodi: str = None) -> None:
         if tahun != None:
@@ -30,14 +33,6 @@ class JadwalKuliahExtractor(HTMLExtractor):
 
         if prodi != None:
             self.prodi = prodi
-
-    def get_config(self) -> dict:
-        return {
-            'tahun': self.tahun,
-            'semester': self.semester,
-            'fakultas': self.fakultas,
-            'prodi': self.prodi
-        }
 
     def get_response(self) -> requests.models.Response:
         if config.NIM == None:
