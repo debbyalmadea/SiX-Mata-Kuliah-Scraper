@@ -50,18 +50,21 @@ class MataKuliahParser(HTMLParser):
             
             print(f"Scraping Mata Kuliah Program Studi: {prodi['nama']}, Tahun: {self.extractor.get_config()['tahun']}")
             for i in range(len(table_data)):
-                row_data = table_data[i].find_all('a')
+                row_data = table_data[i].find_all('td')
                 self.__parse_row_data(row_data, prodi)
                 
                 
     def __parse_row_data(self, row_data, prodi):
-        id = int(row_data[0]['href'].split('/')[-2])
+        id = int(row_data[0].find('a')['href'].split('/')[-2])
         kode = row_data[0].text.strip()
         nama = row_data[1].text.strip()
+        sks = row_data[2].text.strip()
+
 
         self.data += [{
             'id': id,
             'kode': kode,
             'nama': nama,
-            'prodi': prodi['kode']
+            'prodi': prodi['kode'],
+            'sks': sks
         }]

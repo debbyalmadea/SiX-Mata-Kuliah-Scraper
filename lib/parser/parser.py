@@ -29,8 +29,6 @@ class HTMLParser(ABC):
         return json_object['data']
 
     def save(self):
-        self.data = self.read()
-
         if self.data is None:
             self.parse()
 
