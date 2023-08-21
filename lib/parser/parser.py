@@ -9,22 +9,28 @@ class HTMLParser(ABC):
         self.filename = filename
         self.data = None
 
-    def get(self) -> list:
-        self.data = self.read()
-        if self.data is None:
+    def get(self, force_extract: bool = False) -> list:
+        if force_extract:
             self.parse()
+        else:
+            self.data = self.read()
 
-        self.save()
+            if self.data is None:
+                self.parse()
+
         return self.data
 
     def read(self):
         json_object = IO.read_json(self.filename)
+        
         if json_object is None:
             return None
+        
         return json_object['data']
 
     def save(self):
         self.data = self.read()
+
         if self.data is None:
             self.parse()
 

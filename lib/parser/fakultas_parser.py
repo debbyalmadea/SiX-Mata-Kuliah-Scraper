@@ -3,11 +3,23 @@ from lib.parser.parser import HTMLParser
 
 
 class FakultasParser(HTMLParser):
-    def __init__(self, tahun: int, semester: int) -> None:
+    def __init__(self) -> None:
         super().__init__("fakultas")
 
         self.extractor = JadwalKuliahExtractor()
-        self.extractor.set_config(tahun=tahun, semester=semester)
+
+    
+    def get_config(self) -> dict:
+        return self.extractor.get_config()
+
+
+    def set_config(self, tahun: int = None, semester: int = None) -> None:
+        if tahun != None:
+            self.extractor.set_config(tahun=tahun)
+
+        if semester != None:
+            self.extractor.set_config(semester=semester)
+
 
     def parse(self) -> None:
         soup = self.extractor.get_soup()
