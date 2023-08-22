@@ -3,9 +3,6 @@ from lib.parser.parser import HTMLParser
 from lib.parser.prodi_parser import ProdiParser
 
 
-import traceback
-
-
 class MataKuliahParser(HTMLParser):
     def __init__(self):
         super().__init__("mata_kuliah")
