@@ -8,6 +8,7 @@ import db
 
 def main():
     fakultas_parser = FakultasParser()
+    fakultas_parser.set_config(tahun=2023, semester=1)
     fakultas_parser.save()
 
     prodi_parser = ProdiParser()
