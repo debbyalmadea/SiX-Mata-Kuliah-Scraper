@@ -15,7 +15,7 @@ class DosenParser(HTMLParser):
 
     def parse(self) -> None:
         list_jadwal_mk = JadwalKuliahParser(
-            tahun=self.tahun, semester=self.semester).save()
+            tahun=self.tahun, semester=self.semester).read()
 
         self.data = []
         for jadwal_mk in list_jadwal_mk:

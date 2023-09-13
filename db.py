@@ -1,256 +1,127 @@
-
-import mysql.connector
-from datetime import datetime
+from lib.model.fakultas import Fakultas
+from lib.model.program_studi import ProgramStudi
+from lib.model.dosen import Dosen
+from lib.model.mata_kuliah import MataKuliah
+from lib.model.kelas_mata_kuliah import KelasMataKuliah
+from lib.model.jadwal_kelas import JadwalKelas
+from lib.model.batasan_kelas import BatasanKelas
 
 from lib.parser.fakultas_parser import FakultasParser
 from lib.parser.prodi_parser import ProdiParser
-from lib.parser.jadwal_kuliah_parser import JadwalKuliahParser
 from lib.parser.dosen_parser import DosenParser
+from lib.parser.mata_kuliah_parser import MataKuliahParser
+from lib.parser.jadwal_kuliah_parser import JadwalKuliahParser
 
-from config import DATABASE_NAME, DATABASE_HOST, DATABASE_USER, DATABASE_PASSWORD
+from lib.config.sqlalchemy import Session, engine, Base
 
-database_name = DATABASE_NAME
-host = DATABASE_HOST
-user = DATABASE_USER
-password = DATABASE_PASSWORD
-
-
-def __create_db__(cursor, connection):
-    print('Creating database...')
-    cursor.execute(f"CREATE DATABASE IF NOT EXISTS {database_name}")
-    connection.database = database_name
+from datetime import datetime
 
 
-def __save_fakultas_json__(cursor):
-    print("Creating table fakultas...")
-    create_table_query = "CREATE TABLE IF NOT EXISTS fakultas (nama VARCHAR(20), PRIMARY KEY (nama))"
-    cursor.execute(create_table_query)
-    fakultas_list = FakultasParser.read()
-    for fakultas in fakultas_list:
-        insert_query = "INSERT INTO fakultas (nama) VALUES (%s)"
-        cursor.execute(insert_query, (fakultas,))
+def save_jadwal_kuliah(tahun: int, semester: int, session: Session):
+    jadwal_kuliah_parser = JadwalKuliahParser(tahun, semester)
+    jadwal_kuliah_list = jadwal_kuliah_parser.read()
 
-    print("Table fakultas creation and data insertion successful.")
+    for jadwal_kuliah in jadwal_kuliah_list:
+        print(jadwal_kuliah['kode'])
+        mata_kuliah = session.query(MataKuliah).filter_by(
+            kode=jadwal_kuliah['kode']).all()
+        print(mata_kuliah)
+        if len(mata_kuliah) > 0:
+            mata_kuliah = mata_kuliah[0]
 
+            for kelas in jadwal_kuliah['list_kelas']:
+                print(kelas['no_kelas'])
+                # kelas mata kuliah
+                kelas_mata_kuliah_obj = KelasMataKuliah(
+                    kelas['no_kelas'], kelas['kuota'], kelas['keterangan'], kelas['tahun'], kelas['semester'], mata_kuliah)
 
-def __save_prodi_json__(cursor):
-    print("Creating table program_studi...")
-    create_table_query = '''CREATE TABLE IF NOT EXISTS program_studi (
-                                kode CHAR(3),
-                                nama VARCHAR(255),
-                                fakultas VARCHAR(20), 
-                                PRIMARY KEY (kode),
-                                FOREIGN KEY (fakultas) REFERENCES fakultas(nama)
-                            )'''
-    cursor.execute(create_table_query)
-    prodi_list = ProdiParser.read()
-    insert_query = "INSERT INTO program_studi (kode, nama, fakultas) VALUES (%s, %s, %s)"
-    for prodi in prodi_list:
-        fakultas = prodi['fakultas']
-        kode = prodi['kode']
-        nama = prodi['nama']
-        cursor.execute(
-            insert_query, (kode, nama, fakultas))
+                # jadwal kelas
+                for jadwal in kelas['list_jadwal']:
+                    jadwal_kelas_obj = JadwalKelas(
+                        kelas_mata_kuliah_obj, jadwal['hari'], datetime.strptime(
+                            jadwal['waktu_awal'], '%H.%M').time(), datetime.strptime(
+                            jadwal['waktu_akhir'], '%H.%M').time(), jadwal['ruangan'])
+                    kelas_mata_kuliah_obj.jadwal_kelas.append(jadwal_kelas_obj)
+                    session.add(jadwal_kelas_obj)
 
-    print("Table program_studi creation and data insertion successful.")
+                # dosen kelas
+                for dosen in kelas['list_dosen']:
+                    dosen_obj = session.query(Dosen).filter_by(
+                        nama=dosen).first()
+                    kelas_mata_kuliah_obj.dosen_kelas.append(dosen_obj)
+                    print(dosen_obj)
 
+                # batasan kelas
+                if kelas.get('batasan') is not None:
+                    for batasan in kelas['batasan']:
+                        batasan_kelas_obj = BatasanKelas(
+                            kelas_mata_kuliah_obj, batasan)
+                        kelas_mata_kuliah_obj.batasan_kelas.append(
+                            batasan_kelas_obj)
+                        session.add(batasan_kelas_obj)
 
-def __save_mata_kuliah_json__(cursor, tahun=2023, semester=1):
-    print("Creating table dosen...")
-    create_table_query = '''CREATE TABLE IF NOT EXISTS dosen (
-                                id INT AUTO_INCREMENT,
-                                nama VARCHAR(255),
-                                PRIMARY KEY (id),
-                                UNIQUE(nama)
-                            )'''
-    cursor.execute(create_table_query)
-
-    print("Creating table mata_kuliah...")
-    create_table_query = '''CREATE TABLE IF NOT EXISTS mata_kuliah (
-                                id INT,
-                                kode CHAR(6),
-                                kode_prodi CHAR(3),
-                                nama VARCHAR(255),
-                                sks INT,
-                                PRIMARY KEY (id),
-                                FOREIGN KEY (kode_prodi) REFERENCES program_studi(kode),
-                                UNIQUE(kode, kode_prodi)
-                            )'''
-    cursor.execute(create_table_query)
-
-    print("Creating table kelas_mata_kuliah...")
-    create_table_query = '''CREATE TABLE IF NOT EXISTS kelas_mata_kuliah (
-                                id INT,
-                                id_matkul INT,
-                                no_kelas INT,
-                                tahun INT,
-                                semester INT,
-                                keterangan VARCHAR(500),
-                                PRIMARY KEY (id),
-                                FOREIGN KEY (id_matkul) REFERENCES mata_kuliah(id),
-                                UNIQUE(id_matkul, no_kelas, tahun, semester)
-                            )'''
-    cursor.execute(create_table_query)
-
-    print("Creating table batasan_kelas...")
-    create_table_query = '''CREATE TABLE IF NOT EXISTS batasan_kelas (
-                                id_kelas INT,
-                                batasan VARCHAR(255),
-                                PRIMARY KEY (id_kelas, batasan),
-                                FOREIGN KEY (id_kelas) REFERENCES kelas_mata_kuliah(id)
-                            )'''
-    cursor.execute(create_table_query)
-
-    print("Creating table dosen_kelas...")
-    create_table_query = '''CREATE TABLE IF NOT EXISTS dosen_kelas (
-                                id_kelas INT,
-                                id_dosen INT,
-                                PRIMARY KEY (id_kelas, id_dosen),
-                                FOREIGN KEY (id_kelas) REFERENCES kelas_mata_kuliah(id)
-                            )'''
-    cursor.execute(create_table_query)
-
-    print("Creating table jadwal_kelas...")
-    create_table_query = '''CREATE TABLE IF NOT EXISTS jadwal_kelas (
-                                id_kelas INT,
-                                hari VARCHAR(20),
-                                waktu_awal TIME,
-                                waktu_akhir TIME,
-                                ruangan VARCHAR(255),
-                                PRIMARY KEY (id_kelas, hari, waktu_awal, waktu_akhir),
-                                FOREIGN KEY (id_kelas) REFERENCES kelas_mata_kuliah(id)
-                            )'''
-    cursor.execute(create_table_query)
-
-    mk_insert_query = "INSERT INTO mata_kuliah (id, kode, kode_prodi, nama, sks) VALUES (%s, %s, %s, %s, %s)"
-    kelas_mk_insert_query = "INSERT INTO kelas_mata_kuliah (id, id_matkul, no_kelas, tahun, semester, keterangan) VALUES (%s, %s, %s, %s, %s, %s)"
-    dosen_kelas_insert_query = "INSERT INTO dosen_kelas (id_kelas, id_dosen) VALUES (%s, %s)"
-    batasan_kelas_insert_query = "INSERT INTO batasan_kelas (id_kelas, batasan) VALUES (%s, %s)"
-
-    dosen_insert_query = "INSERT INTO dosen (nama) VALUES (%s)"
-
-    all_dosen_list = DosenParser.read()
-    for dosen in all_dosen_list:
-        try:
-            cursor.execute(dosen_insert_query, (dosen,))
-        except mysql.connector.IntegrityError as err:
-            print("Error: {}".format(err))
-    print("Table dosen creation and data insertion successful.")
-
-    mata_kuliah_list = JadwalKuliahParser.read_mata_kuliah(tahun, semester)
-
-    count_kelas_mk_row_query = "SELECT COUNT(*) FROM kelas_mata_kuliah"
-    cursor.execute(count_kelas_mk_row_query)
-    kelas_count = cursor.fetchone()[0]
-
-    count_mk_query = "SELECT COUNT(*) FROM mata_kuliah"
-    cursor.execute(count_mk_query)
-    matkul_count = cursor.fetchone()[0]
-
-    for mk in mata_kuliah_list:
-        kode = mk['kode']
-        kode_prodi = mk['kode_prodi']
-        nama = mk['nama']
-        sks = int(mk['sks'])
-        print(kode)
-
-        id_matkul_search_query = "SELECT id FROM mata_kuliah WHERE kode = %s and kode_prodi = %s"
-        cursor.execute(id_matkul_search_query, (kode, kode_prodi))
-        id_matkul = cursor.fetchone()
-
-        if not id_matkul:
-            matkul_count += 1
-            id_matkul = matkul_count
+                session.add(kelas_mata_kuliah_obj)
         else:
-            id_matkul = id_matkul[0]
-
-        try:
-            cursor.execute(
-                mk_insert_query, (id_matkul, kode, kode_prodi, nama, sks,))
-        except mysql.connector.IntegrityError as err:
-            print("Error: {}".format(err))
-
-        list_kelas = mk['list_kelas']
-        for kelas in list_kelas:
-            kelas_count += 1
-            no_kelas = int(kelas['no_kelas'])
-            keterangan = kelas['keterangan']
-            cursor.execute(
-                kelas_mk_insert_query, (kelas_count, id_matkul,
-                                        no_kelas, tahun, semester, keterangan)
-            )
-
-            list_batasan = kelas['list_batasan']
-            for batasan in list_batasan:
-                cursor.execute(
-                    batasan_kelas_insert_query, (kelas_count, batasan)
-                )
-
-            list_dosen = kelas['list_dosen']
-            for dosen in list_dosen:
-                id_dosen_search_query = "SELECT id FROM dosen WHERE nama = %s"
-                cursor.execute(id_dosen_search_query, (dosen,))
-                id_dosen = cursor.fetchone()[0]
-                cursor.execute(dosen_kelas_insert_query,
-                               (kelas_count, id_dosen))
-
-            list_jadwal = kelas['list_jadwal']
-            for jadwal in list_jadwal:
-                hari = jadwal['hari']
-                waktu_awal = datetime.strptime(
-                    jadwal['waktu_awal'], '%H.%M').time()
-                waktu_akhir = datetime.strptime(
-                    jadwal['waktu_akhir'], '%H.%M').time()
-                ruangan = jadwal['ruangan']
-
-                jadwal_kelas_insert_query = "INSERT INTO jadwal_kelas (id_kelas, hari, waktu_awal, waktu_akhir, ruangan) VALUES (%s, %s, %s, %s, %s)"
-
-                try:
-                    cursor.execute(jadwal_kelas_insert_query, (
-                        kelas_count, hari, waktu_awal, waktu_akhir, ruangan
-                    ))
-                except mysql.connector.IntegrityError as err:
-                    print("Error: {}".format(err))
-    print("Table program_studi creation and data insertion successful.")
+            print('Mata kuliah tidak ditemukan')
 
 
-def save_fakultas_prodi():
-    connection = mysql.connector.connect(
-        host=host,
-        user=user,
-        password=password,
-    )
+def save():
+    Base.metadata.create_all(engine)
 
-    cursor = connection.cursor()
+    session = Session()
 
-    __create_db__(cursor, connection)
-    __save_fakultas_json__(cursor)
-    __save_prodi_json__(cursor)
+    # fakultas
+    fakultas_parser = FakultasParser()
+    fakultas_list = fakultas_parser.read()
 
-    connection.commit()
-    connection.close()
+    for fakultas in fakultas_list:
+        fakultas_obj = Fakultas(fakultas)
+        session.add(fakultas_obj)
 
-    print("Database creation and data insertion successful.")
-    print()
+    # program studi
+    prodi_parser = ProdiParser()
+    prodi_list = prodi_parser.read()
 
+    for prodi in prodi_list:
+        fakultas = session.query(Fakultas).filter_by(
+            nama=prodi['fakultas']).first()
+        prodi_obj = ProgramStudi(prodi['kode'], prodi['nama'], fakultas)
+        session.add(prodi_obj)
 
-def save_mata_kuliah_dosen(tahun=2023, semester=1):
-    try:
-        connection = mysql.connector.connect(
-            host=host,
-            user=user,
-            password=password,
-            database=database_name
-        )
+    # dosen
+    dosen_parser_2023_1 = DosenParser(2023, 1)
+    dosen_count = 0
+    dosen_list_2023_1 = dosen_parser_2023_1.read()
+    for dosen in dosen_list_2023_1:
+        dosen_count += 1
+        dosen_obj = Dosen(dosen_count, dosen)
+        session.add(dosen_obj)
 
-        cursor = connection.cursor(buffered=True)
+    dosen_parser_2022_2 = DosenParser(2022, 2)
+    dosen_list_2022_2 = dosen_parser_2022_2.read()
+    for dosen in dosen_list_2022_2:
+        if dosen not in dosen_list_2023_1:
+            dosen_count += 1
+            dosen_obj = Dosen(dosen_count, dosen)
+            session.add(dosen_obj)
 
-        __save_mata_kuliah_json__(cursor, tahun, semester)
+    # mata kuliah
+    mata_kuliah_parser = MataKuliahParser()
+    mata_kuliah_list = mata_kuliah_parser.read()
+    for mata_kuliah in mata_kuliah_list:
+        prodi = session.query(ProgramStudi).filter_by(
+            kode=mata_kuliah['prodi']).first()
+        parts = mata_kuliah['sks'].split()
+        sks = int(parts[0])
+        sks_praktikum = 0 if len(parts) == 1 else float(
+            parts[1][1:-1].split(',')[0])
+        mata_kuliah_obj = MataKuliah(
+            mata_kuliah['kode'], mata_kuliah['id'], mata_kuliah['nama'], sks, sks_praktikum, prodi)
+        session.add(mata_kuliah_obj)
 
-        connection.commit()
-        connection.close()
+    # jadwal kuliah
+    save_jadwal_kuliah(2023, 1, session)
+    save_jadwal_kuliah(2022, 2, session)
 
-        print("Database creation and data insertion successful.")
-        print()
-    except mysql.connector.IntegrityError as err:
-        print("Error: {}".format(err))
+    session.commit()
+    session.close()

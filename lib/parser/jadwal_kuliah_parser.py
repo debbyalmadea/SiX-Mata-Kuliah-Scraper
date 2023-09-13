@@ -4,10 +4,6 @@ from lib.extractor.jadwal_kuliah_extractor import JadwalKuliahExtractor
 from lib.parser.parser import HTMLParser
 from lib.parser.prodi_parser import ProdiParser
 
-from lib.model.mata_kuliah import MataKuliah
-from lib.model.kelas_mata_kuliah import KelasMataKuliah
-from lib.model.jadwal_kelas import JadwalKelas
-
 
 class JadwalKuliahParser(HTMLParser):
     def __init__(self, tahun: int, semester: int) -> None:
@@ -17,19 +13,21 @@ class JadwalKuliahParser(HTMLParser):
         self.semester = semester
 
         self.extractor = JadwalKuliahExtractor()
-        self.extractor.set_config(tahun=tahun, semester=semester)
 
     def parse(self) -> None:
-        list_prodi = ProdiParser(
-            tahun=self.tahun, semester=self.semester).get()
-
+        list_prodi = ProdiParser().get()
         self.data = []
 
         for prodi in list_prodi:
-            table = self.extractor.find('table')
+            self.extractor.set_config(tahun=self.tahun, semester=self.semester,
+                                      fakultas=prodi['fakultas'], prodi=prodi['kode'])
+
+            print(self.extractor.get_config())
+            soup = self.extractor.get_soup()
+            table = soup.find('table')
 
             if not table:
-                return [], []
+                continue
 
             table_data = table.find_all('tr')
 
@@ -47,7 +45,13 @@ class JadwalKuliahParser(HTMLParser):
                 nama = individual_row_data[1]
                 sks = int(individual_row_data[2])
 
-                mata_kuliah = MataKuliah(kode, prodi['kode'], nama, sks)
+                # mata_kuliah = MataKuliah(kode, prodi['kode'], nama, sks)
+                mata_kuliah = {
+                    "kode": kode,
+                    "kode_prodi": prodi['kode'],
+                    "nama": nama,
+                    "sks": sks,
+                }
 
                 no_kelas = int(individual_row_data[3])
                 kuota = 0
@@ -58,8 +62,17 @@ class JadwalKuliahParser(HTMLParser):
                               for dosen in individual_row_data[5].split('\n')]
 
                 keterangan_batasan = row_data[-2].find_all('p')
-                kelas_mata_kuliah = KelasMataKuliah(
-                    no_kelas, kuota, list_dosen, self.tahun, self.semester)
+                # kelas_mata_kuliah = KelasMataKuliah(
+                #     no_kelas, kuota, list_dosen, self.tahun, self.semester)
+                kelas_mata_kuliah = {
+                    "no_kelas": no_kelas,
+                    "kuota": kuota,
+                    "tahun": self.tahun,
+                    "semester": self.semester,
+                    "keterangan": "",
+                    "list_dosen": list_dosen,
+                    "list_batasan": []
+                }
 
                 for item in keterangan_batasan:
                     if "Batasan" in item.text:
@@ -72,9 +85,10 @@ class JadwalKuliahParser(HTMLParser):
 
                         list_batasan = [batasan.strip()
                                         for batasan in list_batasan.split('\n')[2:]]
-                        kelas_mata_kuliah.list_batasan = list_batasan
+                        kelas_mata_kuliah["list_batasan"] = list_batasan
                     else:
-                        kelas_mata_kuliah.keterangan = item.text.strip().replace('  ', '').replace('\n', ' ')
+                        kelas_mata_kuliah["keterangan"] = item.text.strip().replace(
+                            '  ', '').replace('\n', ' ')
 
                 schedules = row_data[-1].find_all('li')
                 list_jadwal = []
@@ -92,19 +106,26 @@ class JadwalKuliahParser(HTMLParser):
                     ruangan = schedule[3].strip().replace(
                         " ", "").replace("\n", " ")
 
-                    jadwal = JadwalKelas(
-                        hari, waktu_mulai, waktu_akhir, ruangan)
+                    # jadwal = JadwalKelas(
+                    #     hari, waktu_mulai, waktu_akhir, ruangan)
+                    jadwal = {
+                        "hari": hari,
+                        "waktu_awal": waktu_mulai.strftime("%H.%M"),
+                        "waktu_akhir": waktu_akhir.strftime("%H.%M"),
+                        "ruangan": ruangan
+                    }
+
                     if not self.__is_jadwal_mata_kuliah_exists__(jadwal, list_jadwal):
                         list_jadwal.append(jadwal)
                     else:
                         break
 
-                kelas_mata_kuliah.list_jadwal = list_jadwal
+                kelas_mata_kuliah["list_jadwal"] = list_jadwal
                 kelas_mata_kuliah_list.append(kelas_mata_kuliah)
 
-                mata_kuliah.list_kelas = kelas_mata_kuliah_list
+                mata_kuliah["list_kelas"] = kelas_mata_kuliah_list
                 if not self.__is_mata_kuliah_exists__(kode):
-                    self.data.append(mata_kuliah.to_dict())
+                    self.data.append(mata_kuliah)
 
     def __is_mata_kuliah_exists__(self, kode_matkul):
         for matkul in self.data:
@@ -115,7 +136,11 @@ class JadwalKuliahParser(HTMLParser):
 
     def __is_jadwal_mata_kuliah_exists__(self, jadwal_mk, jadwal_list):
         for jadwal in jadwal_list:
-            if jadwal.is_equal(jadwal_mk):
+            if (
+                jadwal_mk["hari"] == jadwal["hari"] and
+                jadwal_mk["waktu_awal"] == jadwal["waktu_awal"] and
+                jadwal_mk["waktu_akhir"] == jadwal["waktu_akhir"]
+            ):
                 return True
 
         return False
