@@ -12,7 +12,7 @@ class MataKuliah(Base):
     nama = Column('nama', String(255))
     sks = Column('sks', Integer)
     sks_praktikum = Column('sks_praktikum', Float)
-    program_studi_kode = Column('program_studi_kode', Integer,
+    program_studi_kode = Column('program_studi_kode', String(3),
                                 ForeignKey('program_studi.kode'))
     program_studi = relationship(
         "ProgramStudi", back_populates="mata_kuliah", uselist=False)

@@ -6,7 +6,7 @@ from lib.config.sqlalchemy import Base
 class ProgramStudi(Base):
     __tablename__ = 'program_studi'
 
-    kode = Column('kode', Integer, primary_key=True, autoincrement=False)
+    kode = Column('kode', String(3), primary_key=True, autoincrement=False)
     nama = Column('nama', String(50))
     fakultas_nama = Column('fakultas_nama', String(50),
                            ForeignKey('fakultas.nama'))

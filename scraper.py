@@ -7,23 +7,22 @@ import db
 
 
 def main():
-    fakultas_parser = FakultasParser()
-    fakultas_parser.save()
+    # fakultas_parser = FakultasParser()
+    # fakultas_parser.save()
 
-    prodi_parser = ProdiParser()
-    prodi_parser.save()
+    # prodi_parser = ProdiParser()
+    # prodi_parser.save()
 
-    jadwal_kuliah_parser = JadwalKuliahParser(2023, 1)
-    jadwal_kuliah_parser.save()
-    jadwal_kuliah_parser.tahun = 2022
-    jadwal_kuliah_parser.semester = 2
-    jadwal_kuliah_parser.save()
+    # jadwal_kuliah_parser = JadwalKuliahParser(2023, 1)
+    # jadwal_kuliah_parser.save()
+    # jadwal_kuliah_parser = JadwalKuliahParser(2022, 2)
+    # jadwal_kuliah_parser.save()
 
-    dosen_parser = DosenParser(2023, 1)
-    dosen_parser.save()
-    dosen_parser.tahun = 2022
-    dosen_parser.semester = 2
-    dosen_parser.save()
+    # dosen_parser = DosenParser(2023, 1)
+    # dosen_parser.save()
+    # dosen_parser.tahun = 2022
+    # dosen_parser.semester = 2
+    # dosen_parser.save()
 
     db.save()
 

@@ -22,18 +22,17 @@ def save_jadwal_kuliah(tahun: int, semester: int, session: Session):
     jadwal_kuliah_list = jadwal_kuliah_parser.read()
 
     for jadwal_kuliah in jadwal_kuliah_list:
-        print(jadwal_kuliah['kode'])
         mata_kuliah = session.query(MataKuliah).filter_by(
             kode=jadwal_kuliah['kode']).all()
+        kode_prodi = jadwal_kuliah['kode_prodi']
         print(mata_kuliah)
         if len(mata_kuliah) > 0:
             mata_kuliah = mata_kuliah[0]
 
             for kelas in jadwal_kuliah['list_kelas']:
-                print(kelas['no_kelas'])
                 # kelas mata kuliah
                 kelas_mata_kuliah_obj = KelasMataKuliah(
-                    kelas['no_kelas'], kelas['kuota'], kelas['keterangan'], kelas['tahun'], kelas['semester'], mata_kuliah)
+                    kelas['no_kelas'], kelas['kuota'], kelas['keterangan'], kelas['tahun'], kelas['semester'], mata_kuliah, kode_prodi)
 
                 # jadwal kelas
                 for jadwal in kelas['list_jadwal']:
@@ -48,8 +47,10 @@ def save_jadwal_kuliah(tahun: int, semester: int, session: Session):
                 for dosen in kelas['list_dosen']:
                     dosen_obj = session.query(Dosen).filter_by(
                         nama=dosen).first()
+                    if dosen_obj is None:
+                        dosen_obj = Dosen(dosen)
+                        session.add(dosen_obj)
                     kelas_mata_kuliah_obj.dosen_kelas.append(dosen_obj)
-                    print(dosen_obj)
 
                 # batasan kelas
                 if kelas.get('batasan') is not None:
@@ -90,19 +91,16 @@ def save():
 
     # dosen
     dosen_parser_2023_1 = DosenParser(2023, 1)
-    dosen_count = 0
     dosen_list_2023_1 = dosen_parser_2023_1.read()
     for dosen in dosen_list_2023_1:
-        dosen_count += 1
-        dosen_obj = Dosen(dosen_count, dosen)
+        dosen_obj = Dosen(dosen)
         session.add(dosen_obj)
 
     dosen_parser_2022_2 = DosenParser(2022, 2)
     dosen_list_2022_2 = dosen_parser_2022_2.read()
     for dosen in dosen_list_2022_2:
         if dosen not in dosen_list_2023_1:
-            dosen_count += 1
-            dosen_obj = Dosen(dosen_count, dosen)
+            dosen_obj = Dosen(dosen)
             session.add(dosen_obj)
 
     # mata kuliah

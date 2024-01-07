@@ -31,8 +31,8 @@ class JadwalKuliahParser(HTMLParser):
 
             table_data = table.find_all('tr')
 
+            kelas_mata_kuliah_list = []
             for row in table_data:
-                kelas_mata_kuliah_list = []
                 row_data = row.find_all('td')
 
                 if (len(row_data) == 0):
@@ -123,9 +123,11 @@ class JadwalKuliahParser(HTMLParser):
                 kelas_mata_kuliah["list_jadwal"] = list_jadwal
                 kelas_mata_kuliah_list.append(kelas_mata_kuliah)
 
-                mata_kuliah["list_kelas"] = kelas_mata_kuliah_list
                 if not self.__is_mata_kuliah_exists__(kode):
+                    mata_kuliah["list_kelas"] = [kelas_mata_kuliah]
                     self.data.append(mata_kuliah)
+                else:
+                    self.data[-1]["list_kelas"].append(kelas_mata_kuliah)
 
     def __is_mata_kuliah_exists__(self, kode_matkul):
         for matkul in self.data:
