@@ -61,6 +61,7 @@ def save_jadwal_kuliah(tahun: int, semester: int, session: Session):
                             batasan_kelas_obj)
                         session.add(batasan_kelas_obj)
 
+                print(kelas_mata_kuliah_obj)
                 session.add(kelas_mata_kuliah_obj)
         else:
             print('Mata kuliah tidak ditemukan')
@@ -77,6 +78,7 @@ def save():
 
     for fakultas in fakultas_list:
         fakultas_obj = Fakultas(fakultas)
+        print(fakultas_obj)
         session.add(fakultas_obj)
 
     # program studi
@@ -87,6 +89,7 @@ def save():
         fakultas = session.query(Fakultas).filter_by(
             nama=prodi['fakultas']).first()
         prodi_obj = ProgramStudi(prodi['kode'], prodi['nama'], fakultas)
+        print(prodi_obj)
         session.add(prodi_obj)
 
     # dosen
@@ -94,14 +97,16 @@ def save():
     dosen_list_2023_1 = dosen_parser_2023_1.read()
     for dosen in dosen_list_2023_1:
         dosen_obj = Dosen(dosen)
-        session.add(dosen_obj)
+        print(dosen_obj)
+    session.add(dosen_obj)
 
     dosen_parser_2022_2 = DosenParser(2022, 2)
     dosen_list_2022_2 = dosen_parser_2022_2.read()
     for dosen in dosen_list_2022_2:
         if dosen not in dosen_list_2023_1:
             dosen_obj = Dosen(dosen)
-            session.add(dosen_obj)
+            print(dosen_obj)
+    session.add(dosen_obj)
 
     # mata kuliah
     mata_kuliah_parser = MataKuliahParser()
@@ -115,6 +120,7 @@ def save():
             parts[1][1:-1].split(',')[0])
         mata_kuliah_obj = MataKuliah(
             mata_kuliah['kode'], mata_kuliah['id'], mata_kuliah['nama'], sks, sks_praktikum, prodi)
+        print(mata_kuliah_obj)
         session.add(mata_kuliah_obj)
 
     # jadwal kuliah

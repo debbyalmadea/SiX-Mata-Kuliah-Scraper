@@ -8,6 +8,8 @@ class HTMLParser(ABC):
     def __init__(self, filename) -> None:
         self.filename = filename
         self.data = None
+        self.tahun = 2023
+        self.semester = 1
 
     def get(self, force_extract: bool = False) -> list:
         if force_extract:

@@ -28,7 +28,7 @@ Berikut adalah langkah-langkah untuk menjalankan proyek SiX Web Scraper:
    - Pergi ke tab Application (Aplikasi) atau Storage (Penyimpanan) di inspect element.
    - Temukan cookies yang memiliki nama `khongguan`.
 
-4. Pastikan server MySQL sudah berjalan dan Anda memiliki database yang sesuai dengan konfigurasi yang diisi di dalam file `.env`.
+4. Pastikan server PostgreSQL sudah berjalan dan Anda memiliki database yang sesuai dengan konfigurasi yang diisi di dalam file `.env`.
 
 5. Jalankan web scraper dengan menggunakan perintah berikut:
    ```bash
